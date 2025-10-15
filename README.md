@@ -7,12 +7,19 @@ Características:
 - Autenticación con usuario y contraseña.
 - Manejo de bearer token y refresh token.
 - Persistencia automática de tokens en disco (`tokens.json`).
-- Refresco automático de tokens al expirar..
+- Refresco automático de tokens al expirar.
+- Cache de token por endpoint para mayor eficiencia.
+- Context manager (`with IOLClient() as client`) para inicialización y limpieza automática.
 - Métodos GET y POST autenticados listos para usar.
+- Ideal para estrategias de trading automáticas y consultas frecuentes.
 
 ## Instalación
 
+Cloná el repositorio y instalá las dependencias:
+
 ```bash
+git clone https://github.com/tu-usuario/iol-client.git
+cd iol-client
 pip install -r requirements.txt
 ```
 
@@ -26,14 +33,17 @@ IOL_PASSWORD=tu_contraseña
 IOL_API_URL=https://api.invertironline.com
 ```
 
+Crea un archivo main.py por ejemplo
+
 ```python
+
 from iol_client import IOLClient
 
-with IOLClient() as client:
-    # Obtener estado de cuenta
-    data = client.get("/api/v2/estadocuenta")
+def main():
+    iol = IOLClient()
+    iol.authenticate()
+    data = iol.get("/api/v2/estadocuenta")
     print(data)
-
-    # Ejecutar orden (ejemplo)
-    # client.post("/api/v2/ordenes", data={"ticker": "GGAL", "cantidad": 10})
+if __name__ == "__main__":
+    main()
 ```

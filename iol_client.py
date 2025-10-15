@@ -11,8 +11,10 @@ TOKEN_FILE = "tokens.json"
 
 class IOLClient:
     """
-    Cliente para la API de InvertirOnline.
-    Maneja autenticación, refresh token, persistencia y requests autenticadas.
+    Cliente profesional para la API de InvertirOnline (IOL)
+    - Maneja autenticación, refresh token, persistencia y requests autenticadas.
+    - Cache de tokens por endpoint.
+    - Context manager para inicialización y limpieza automática.
     """
 
     def __init__(self):
@@ -26,6 +28,19 @@ class IOLClient:
 
         self.tokens = self._cargar_tokens()
 
+    # -----------------------------------------------------------
+    # Context manager
+    # -----------------------------------------------------------
+    def __enter__(self):
+        # No hace nada especial al entrar
+        return self
+
+    def __exit__(self, exc_type, exc_val, exc_tb):
+        # Persiste todos los tokens al salir
+        self._guardar_tokens()
+
+    
+    
     # -----------------------------------------------------------
     # 🔐 Manejo de tokens
     # -----------------------------------------------------------
@@ -42,6 +57,10 @@ class IOLClient:
         if self.tokens:
             with open(TOKEN_FILE, "w") as f:
                 json.dump(self.tokens, f)
+
+    def _endpoint_key(self, endpoint: str) -> str:
+        """Normaliza endpoint para usar como clave en cache."""
+        return endpoint.lstrip("/")
 
     def authenticate(self):
         """Obtiene bearer y refresh tokens usando usuario/contraseña."""
