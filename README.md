@@ -18,7 +18,7 @@ pip install -r requirements.txt
 
 ## Uso
 
-cCrear un archivo .env con tus credenciales:
+Crear un archivo .env con tus credenciales:
 
 ```python
 IOL_USERNAME=tu_usuario
@@ -36,5 +36,4 @@ with IOLClient() as client:
 
     # Ejecutar orden (ejemplo)
     # client.post("/api/v2/ordenes", data={"ticker": "GGAL", "cantidad": 10})
-
 ```
