@@ -18,7 +18,7 @@ Características:
 Cloná el repositorio y instalá las dependencias:
 
 ```bash
-git clone https://github.com/tu-usuario/iol-client.git
+git clone https://github.com/afreisinger/iol-client.git
 cd iol-client
 pip install -r requirements.txt
 ```
