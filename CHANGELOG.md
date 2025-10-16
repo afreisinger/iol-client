@@ -9,7 +9,6 @@
 - Cache de token por endpoint
 - Context manager (`with IOLClient() as client`)
 - Añadido ejemplos de instrumentos
-- README.md actualizado
 - Preparado para múltiples endpoints y estrategias de trading automáticas
 
 ## v0.1.0 – 2025-10-15
