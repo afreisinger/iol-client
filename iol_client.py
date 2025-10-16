@@ -38,19 +38,6 @@ class IOLClient:
     - Context manager para inicialización y limpieza automática.
     """
 
-    # def __init__(self, api_url=None, username=None, password=None, log_level=None):
-    #     load_dotenv()
-    #     self.api_url = api_url or os.getenv("IOL_API_URL")
-    #     self.username = username or os.getenv("IOL_USERNAME")
-    #     self.password = password or os.getenv("IOL_PASSWORD")
-    #     self.log_level = log_level or os.getenv("IOL_LOG_LEVEL", "INFO").upper()
-
-    #     if not self.username or not self.password:
-    #         raise ValueError("Faltan credenciales en el archivo .env")
-
-    #     self.tokens = self._cargar_tokens()
-    #     logger.debug(f"[cyan]Cliente inicializado con endpoint[/cyan] {self.api_url}")
-
     def __init__(self, api_url=None, username=None, password=None, log_level=None):
         load_dotenv()
         self.api_url = api_url or os.getenv("IOL_API_URL")
