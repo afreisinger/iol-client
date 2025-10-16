@@ -1,7 +1,12 @@
-from iol_client import IOLClient
+from iol_client import IOLClient, logger
 
 
 def main():
+
+    logger.disabled = False
+    logger.setLevel("DEBUG")
+
+
     iol = IOLClient()
 
     # Autenticarse (se hace automáticamente si no hay token válido)
