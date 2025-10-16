@@ -62,6 +62,7 @@ class IOLClient:
     # 🔐 Manejo de tokens
     # -----------------------------------------------------------
     def _cargar_tokens(self) -> Dict[str, Any]:
+        """Carga tokens desde archivo, si existen."""
         if os.path.exists(TOKEN_FILE):
             with open(TOKEN_FILE, "r") as f:
                 tokens = json.load(f)
@@ -71,12 +72,14 @@ class IOLClient:
         return None
 
     def _guardar_tokens(self):
+        """Guarda tokens en archivo JSON."""
         if self.tokens:
             with open(TOKEN_FILE, "w") as f:
                 json.dump(self.tokens, f)
             logger.info("[green]💾 Tokens guardados correctamente.[/green]")
 
     def authenticate(self):
+        """Obtiene bearer y refresh tokens usando usuario/contraseña."""
         logger.info("[blue]🔐 Autenticando usuario en IOL...[/blue]")
         logger.debug(f"[blue]Usuario:[/blue] {self.username}")
         data = {
@@ -102,6 +105,7 @@ class IOLClient:
         return self.tokens
 
     def refresh_token(self):
+        """Refresca el bearer token usando el refresh token."""
         if not self.tokens or "refresh_token" not in self.tokens:
             raise RuntimeError("No hay token para refrescar. Ejecutá authenticate() primero.")
 
@@ -140,12 +144,14 @@ class IOLClient:
         return self.tokens
   
     def token_expired(self) -> bool:
+        """Chequea si el bearer token expiró."""
         expired = not self.tokens or time.time() >= self.tokens.get("expires_at", 0)
         if expired:
             logger.debug("[yellow]⚠️  El token ha expirado o no existe.[/yellow]")
         return expired
 
     def get_access_token(self) -> str:
+        """Devuelve un bearer token válido (refrescando si es necesario)."""
         if self.token_expired():
             if self.tokens and "refresh_token" in self.tokens:
                 self.refresh_token()
@@ -160,6 +166,7 @@ class IOLClient:
         return {"Authorization": f"Bearer {self.get_access_token()}"}
 
     def get(self, endpoint: str, params: Dict[str, Any] = None):
+        """GET autenticado."""
         url = f"{self.api_url}/{endpoint.lstrip('/')}"
         logger.info(f"[cyan]🌐 GET[/cyan] {url}")
         response = requests.get(url, headers=self._auth_headers(), params=params)
@@ -172,6 +179,7 @@ class IOLClient:
         return response.json()
 
     def post(self, endpoint: str, data: Dict[str, Any] = None):
+        """POST autenticado."""
         url = f"{self.api_url}/{endpoint.lstrip('/')}"
         logger.info(f"[magenta]📤 POST[/magenta] {url}")
         response = requests.post(url, headers=self._auth_headers(), data=data)
