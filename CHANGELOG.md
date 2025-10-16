@@ -1,11 +1,15 @@
 # Changelog
 
+## v0.2.1 – 2025-10-16
+
+- Looging enriquecido
+
 ## v0.2.0 – 2025-10-15
 
-- Añadido cache de token por endpoint
-- Añadido context manager (`with IOLClient() as client`)
+- Cache de token por endpoint
+- Context manager (`with IOLClient() as client`)
 - Añadido ejemplos de instrumentos
-- Update README.md
+- README.md actualizado
 - Preparado para múltiples endpoints y estrategias de trading automáticas
 
 ## v0.1.0 – 2025-10-15

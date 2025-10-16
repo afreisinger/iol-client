@@ -11,6 +11,7 @@ Características:
 - Cache de token por endpoint para mayor eficiencia.
 - Context manager (`with IOLClient() as client`) para inicialización y limpieza automática.
 - Métodos GET y POST autenticados listos para usar.
+- Logging enriquecido.
 - Ideal para estrategias de trading automáticas y consultas frecuentes.
 
 ## Instalación
