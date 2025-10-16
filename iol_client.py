@@ -10,15 +10,24 @@ from rich.logging import RichHandler
 TOKEN_FILE = "tokens.json"
 
 # -----------------------------------------------------------
-# 📜 Configuración básica de logging
+# Configuración básica de logging
 # -----------------------------------------------------------
+
+# Carga variables de entorno (.env)
+load_dotenv()
+
+# Nivel por defecto: INFO (se puede cambiar por .env o argumento)
 log_level = os.getenv("IOL_LOG_LEVEL", "INFO").upper()
+
+# Configuración base (solo se ejecuta una vez)
 logging.basicConfig(
-    level=getattr(logging, log_level, logging.INFO),  # Cambiá a DEBUG para más detalle
+    level=getattr(logging, log_level, logging.INFO),
     format="[%(asctime)s] %(levelname)s - %(message)s",
     datefmt="%H:%M:%S",
     handlers=[RichHandler(rich_tracebacks=True, markup=True)],
 )
+
+# Logger global del cliente
 logger = logging.getLogger("IOLClient")
 
 class IOLClient:
@@ -29,25 +38,43 @@ class IOLClient:
     - Context manager para inicialización y limpieza automática.
     """
 
-    def __init__(self):
+    # def __init__(self, api_url=None, username=None, password=None, log_level=None):
+    #     load_dotenv()
+    #     self.api_url = api_url or os.getenv("IOL_API_URL")
+    #     self.username = username or os.getenv("IOL_USERNAME")
+    #     self.password = password or os.getenv("IOL_PASSWORD")
+    #     self.log_level = log_level or os.getenv("IOL_LOG_LEVEL", "INFO").upper()
+
+    #     if not self.username or not self.password:
+    #         raise ValueError("Faltan credenciales en el archivo .env")
+
+    #     self.tokens = self._cargar_tokens()
+    #     logger.debug(f"[cyan]Cliente inicializado con endpoint[/cyan] {self.api_url}")
+
+    def __init__(self, api_url=None, username=None, password=None, log_level=None):
         load_dotenv()
-        self.api_url = os.getenv("IOL_API_URL", "https://api.invertironline.com")
-        self.username = os.getenv("IOL_USERNAME")
-        self.password = os.getenv("IOL_PASSWORD")
+        self.api_url = api_url or os.getenv("IOL_API_URL")
+        self.username = username or os.getenv("IOL_USERNAME")
+        self.password = password or os.getenv("IOL_PASSWORD")
+        self.log_level = log_level or os.getenv("IOL_LOG_LEVEL", "INFO").upper()
 
         if not self.username or not self.password:
-            raise ValueError("Faltan credenciales en el archivo .env")
+                raise ValueError("Faltan credenciales en el archivo .env o en los argumentos.")
 
-        self.tokens = self._cargar_tokens()
-        logger.debug(f"[cyan]Cliente inicializado con endpoint[/cyan] {self.api_url}")
+        # Ajustar nivel de log dinámicamente (por instancia)
+        logger.setLevel(getattr(logging, self.log_level, logging.INFO))
+        logger.debug(f"[cyan]Logger configurado con nivel {self.log_level}[/cyan]")
 
-
+        # Ejemplo de log inicial
+        logger.debug(f"[cyan]Cliente inicializado con endpoint:[/cyan] {self.api_url}")
+  
+  
     # -----------------------------------------------------------
     # Context manager
     # -----------------------------------------------------------
     def __enter__(self):
         # No hace nada especial al entrar
-        logger.info("[green]🔑 Iniciando sesión con IOLClient...[/green]")
+        logger.debug("[green]🔑 Iniciando sesión con IOLClient...[/green]")
         return self
 
     def __exit__(self, exc_type, exc_val, exc_tb):
@@ -55,6 +82,7 @@ class IOLClient:
         self._guardar_tokens()
         if exc_type:
             logger.error(f"[red]Ocurrió un error:[/red] {exc_type.__name__} - {exc_val}")
+        return False  # No suprime excepciones
 
     
     
@@ -66,22 +94,22 @@ class IOLClient:
         if os.path.exists(TOKEN_FILE):
             with open(TOKEN_FILE, "r") as f:
                 tokens = json.load(f)
-                logger.info("[green]✅ Tokens cargados desde archivo.[/green]")
+                logger.debug("[green]✅ Tokens cargados desde archivo.[/green]")
                 return tokens
-        logger.info("[yellow]ℹ️ No se encontraron tokens guardados.[/yellow]")
+        logger.debug("[yellow]ℹ️ No se encontraron tokens guardados.[/yellow]")
         return None
 
     def _guardar_tokens(self):
         """Guarda tokens en archivo JSON."""
         if self.tokens:
             with open(TOKEN_FILE, "w") as f:
-                json.dump(self.tokens, f)
-            logger.info("[green]💾 Tokens guardados correctamente.[/green]")
+                json.dump(self.tokens, f, indent=2)
+            logger.debug("[green]💾 Tokens guardados correctamente.[/green]")
 
     def authenticate(self):
         """Obtiene bearer y refresh tokens usando usuario/contraseña."""
-        logger.info("[blue]🔐 Autenticando usuario en IOL...[/blue]")
-        logger.debug(f"[blue]Usuario:[/blue] {self.username}")
+        logger.debug("[blue]🔐 Autenticando usuario en IOL...[/blue]")
+        logger.debug(f"[blue]🔑 Usuario:[/blue] {self.username}")
         data = {
             "username": self.username,
             "password": self.password,
@@ -101,7 +129,7 @@ class IOLClient:
         self.tokens = response.json()
         self.tokens["expires_at"] = time.time() + self.tokens["expires_in"]
         self._guardar_tokens()
-        logger.info("[green]✅ Autenticación exitosa.[/green]")
+        logger.debug("[green]✅ Autenticación exitosa.[/green]")
         return self.tokens
 
     def refresh_token(self):
@@ -109,7 +137,7 @@ class IOLClient:
         if not self.tokens or "refresh_token" not in self.tokens:
             raise RuntimeError("No hay token para refrescar. Ejecutá authenticate() primero.")
 
-        logger.info("[cyan]♻️  Refrescando token...[/cyan]")
+        logger.debug("[cyan]♻️  Refrescando token...[/cyan]")
         data = {
             "refresh_token": self.tokens["refresh_token"],
             "grant_type": "refresh_token"
@@ -121,26 +149,7 @@ class IOLClient:
         self.tokens = response.json()
         self.tokens["expires_at"] = time.time() + self.tokens["expires_in"]
         self._guardar_tokens()
-        logger.info("[green]✅ Token refrescado correctamente.[/green]")
-        return self.tokens
-
-    def refresh_token(self):
-        if not self.tokens or "refresh_token" not in self.tokens:
-            raise RuntimeError("No hay token para refrescar. Ejecutá authenticate() primero.")
-
-        logger.info("[cyan]♻️  Refrescando token...[/cyan]")
-        data = {
-            "refresh_token": self.tokens["refresh_token"],
-            "grant_type": "refresh_token"
-        }
-
-        response = requests.post(f"{self.api_url}/token", data=data)
-        response.raise_for_status()
-
-        self.tokens = response.json()
-        self.tokens["expires_at"] = time.time() + self.tokens["expires_in"]
-        self._guardar_tokens()
-        logger.info("[green]✅ Token refrescado correctamente.[/green]")
+        logger.debug("[green]✅ Token refrescado correctamente.[/green]")
         return self.tokens
   
     def token_expired(self) -> bool:
@@ -168,25 +177,37 @@ class IOLClient:
     def get(self, endpoint: str, params: Dict[str, Any] = None):
         """GET autenticado."""
         url = f"{self.api_url}/{endpoint.lstrip('/')}"
-        logger.info(f"[cyan]🌐 GET[/cyan] {url}")
-        response = requests.get(url, headers=self._auth_headers(), params=params)
-        if response.status_code == 401:
-            logger.warning("[yellow]⚠️  Token inválido, intentando refrescar...[/yellow]")
-            self.refresh_token()
+        logger.debug(f"[cyan]🌐 GET[/cyan] {url}")
+
+        try:
             response = requests.get(url, headers=self._auth_headers(), params=params)
-        response.raise_for_status()
+            if response.status_code == 401:
+                logger.warning("[yellow]⚠️  Token inválido, intentando refrescar...[/yellow]")
+                self.refresh_token()
+                response = requests.get(url, headers=self._auth_headers(), params=params)
+            response.raise_for_status()
+        except requests.RequestException as e:
+            logger.error(f"[red]❌ Error en GET {endpoint}:[/red] {e}")
+            raise
+
         logger.debug(f"[green]✅ GET {endpoint} OK[/green]")
         return response.json()
 
     def post(self, endpoint: str, data: Dict[str, Any] = None):
-        """POST autenticado."""
         url = f"{self.api_url}/{endpoint.lstrip('/')}"
-        logger.info(f"[magenta]📤 POST[/magenta] {url}")
-        response = requests.post(url, headers=self._auth_headers(), data=data)
-        if response.status_code == 401:
-            logger.warning("[yellow]⚠️  Token inválido, intentando refrescar...[/yellow]")
-            self.refresh_token()
+        logger.debug(f"[magenta]📤 POST[/magenta] {url}")
+        
+        try:
             response = requests.post(url, headers=self._auth_headers(), data=data)
-        response.raise_for_status()
+            if response.status_code == 401:
+                logger.warning("[yellow]⚠️  Token inválido, intentando refrescar...[/yellow]")
+                self.refresh_token()
+                response = requests.post(url, headers=self._auth_headers(), data=data)
+            response.raise_for_status()
+        except requests.RequestException as e:
+            logger.error(f"[red]❌ Error en POST {endpoint}:[/red] {e}")
+            raise
+
         logger.debug(f"[green]✅ POST {endpoint} OK[/green]")
         return response.json()
+

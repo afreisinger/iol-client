@@ -4,10 +4,10 @@ from iol_client import IOLClient, logger
 def main():
 
     logger.disabled = False
-    logger.setLevel("DEBUG")
 
 
     iol = IOLClient()
+    #iol = IOLClient(log_level="WARNING")
 
     # Autenticarse (se hace automáticamente si no hay token válido)
     print("🔐 Autenticando con IOL...")
